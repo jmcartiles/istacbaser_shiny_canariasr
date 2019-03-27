@@ -1,0 +1,29 @@
+div.remark-slide-container h1 {
+
+letter-spacing: -1px;
+font-size: 32px;
+font-weight: normal;
+}
+
+div.remark-slide-container h3 {
+	letter-spacing: -1px;
+	font-size: 18px;
+	font-weight: normal;
+	padding-top: 50px
+}
+
+div.remark-slide-container table {
+  width:auto;
+  font-size: 12px;
+}
+
+.title-slide {
+  background-image: url("images/logo_R_Canarias.jpg");
+  background-position: 98% 98%;
+  background-size: 140px auto;
+}
+
+.texto2 {
+  min-height: 1em;
+  font-size: 14px
+}

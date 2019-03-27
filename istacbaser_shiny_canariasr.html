@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Acceso y análisis a datos del ISTAC mediante R y Shiny</title>
+    <meta charset="utf-8" />
+    <meta name="author" content=" Christian González-Martel José M. Cazorla-Artiles Carlos J. Pérez-González" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+    <link rel="stylesheet" href="custom.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Acceso y análisis a datos del ISTAC mediante R y Shiny
+### <br>Christian González-Martel</br><br>José M. Cazorla-Artiles</br><br>Carlos J. Pérez-González</br>
+### 2019/03/25
+
+---
+
+
+
+
+
+
+
+
+
+class: inverse, center, middle
+
+# ¿POR QUÉ REALIZAR ESTE PROYECTO?
+
+---
+
+# Introducción
+
+En la actualidad el incremento de fuentes de datos públicas proporciona amplias oportunidades a la investigación.
+
+Este trabajo se enfoca en la reutilización de los datos que proporciona el Instituto Canario de Estadística ([ISTAC](http://www.gobiernodecanarias.org/istac/)).
+
+Por un lado busca facilitar la consulta y descarga de los datos disponibles en [ISTAC](http://www.gobiernodecanarias.org/istac/). Asimismo se emplea este desarrollo para la elaboración de una aplicación web de utilidad al público en general y a los profesionales del sector turístico en particular, que permite un estudio interactivo y amigable de la evolución del sector.
+
+---
+
+background-image: url("images/istac.png")
+background-position: 85% 1%
+background-size: 200px auto
+
+# Usando la interfaz de ISTAC
+
+&gt; El Instituto Canario de Estadística (ISTAC), es el órgano central del sistema estadístico autonómico y centro oficial de investigación del Gobierno de Canarias, responsable entre otras tareas de proveer información y coordinar la actividad estadística pública en Canarias.
+
+[![istac_web](images/web_istac.png)](http://www.gobiernodecanarias.org/istac/)
+
+---
+
+# Usando la interfaz de ISTAC
+
+.pull-left[
+.texto2[
+Los analistas del sector turístico acceden mediante la web a los datos del [ISTAC](http://www.gobiernodecanarias.org/istac/) para consultar la evolución del sector.
+
+Es habitual que elaboren sus propias bases de datos a partir de estas, de modo que acceden de manera recurrente. 
+
+Esto requiere navegar por la interfaz y realizar múltiples clicks y selecciones, puede resultar tedioso dependiendo de la frecuencia en la que se haga.
+
+Ejemplo de búsqueda:
+* Sector servicios
+* Encuesta sobre Gasto Turístico
+* Series según metodoglogía 2018
+* EGT / Series trimestrales de gasto turístico. Islas de Canarias. 2018 (Metodología 2018)
+* Gasto turístico total según países de residencia.
+* Configurar tabla
+]
+]
+
+.pull-right[
+![istac_web](images/web_istac_busqueda.png)
+]
+
+&gt; No es un proceso escalable.
+
+---
+
+# Motivación en el uso de Shiny
+
+La inspiración de este proyecto, especialmente en lo que a visualización de datos se refiere, proviene de Nueva Zelanda.
+
+En concreto, [The New Zealand Tourism Dashboard](http://tourismdashboard.mbie.govt.nz/).
+
+Un proyecto espectacular.
+
+![The New Zealand Tourism Dashboard](images/TNZTD.png)
+
+---
+
+# Tools
+
+Dando respuesta a los dos apartados indicados:
+
+* [istacbaser](https://github.com/rOpenSpain/istacbaser): R package para acceder de manera programática a los datos disponibles mediante ISTACbase.
+
+
+* [Canary Islands Tourism Dashboard](https://jmcartiles.shinyapps.io/canary_islands_tourism_dashboard/): Aplicación web desarrollada empleando [Shiny](https://shiny.rstudio.com/) que explota la información generada en la [Encuesta sobre Gasto Turístico](http://www.gobiernodecanarias.org/istac/temas_estadisticos/sectorservicios/hosteleriayturismo/demanda/C00028A.html).
+
+
+---
+
+
+class: inverse, center, middle
+
+# ACCESO A LOS DATOS
+# istacbaser
+
+---
+background-image: url("images/ropenspain.png")
+background-position: 85% 7%
+background-size: 200px auto
+
+
+# ISTACBASER
+
+[istacbaser](https://github.com/rOpenSpain/istacbaser) es un R package para acceder de manera programática a todas las tablas de datos disponibles mediante ISTACbase. Actualmente es una contribución a la comunidad de software libre y datos abiertos [rOpenSpain](https://ropenspain.es/).
+
+# ¿Cómo usar istacbaser?&lt;br&gt;Sencillo...
+
+Aquí se indica una [guía de uso](http://jmcartiles.netlify.com/post/istacbaser-a-quick-example-i/).
+
+---
+
+# Instalar istacbaser
+
+Lo primero es descargar el R package desde Github y cargar los packages necesarios para este ejemplo, **dplyr** y **ggplot2**.
+
+
+```r
+# install and load istacbaser
+# install.packages("devtools")
+# library(devtools)
+# install_github("rOpenSpain/istacbaser")
+library(istacbaser)
+
+# Load essentials package for this example
+# install.packages("dplyr")
+# install.packages("ggplot2")
+library(dplyr)
+library(ggplot2)
+```
+
+
+---
+
+# Consultar datasets disponibles (I)
+
+Un objeto clave en este package es `istacbaser::cache`. En este dataframe se recoge la información referida a cada una de las tablas disponibles. Puede verse mediante:
+
+
+```r
+glimpse(cache)
+```
+
+```
+# Observations: 5,257
+# Variables: 11
+# $ tema                 &lt;chr&gt; "Territorio y medio ambiente", "Territori...
+# $ subtemaI             &lt;chr&gt; "Territorio y usos del suelo", "Territori...
+# $ subtemaII            &lt;chr&gt; "Estadística del Territorio", "Estadístic...
+# $ `datos publicadosI`  &lt;chr&gt; "Resultados principales. Canarias", "Resu...
+# $ `datos publicadosII` &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N...
+# $ apijson              &lt;chr&gt; "http://www.gobiernodecanarias.org/istac/...
+# $ lista_tablas         &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N...
+# $ titulo               &lt;chr&gt; "Superficie por islas de Canarias.", "Sup...
+# $ origen               &lt;chr&gt; "Instituto Canario de Estadística (ISTAC)...
+# $ encuesta             &lt;chr&gt; "Estadística del Territorio", "Estadístic...
+# $ ID                   &lt;chr&gt; "ter.ter.est.res.1", "ter.ter.est.res.2",...
+```
+
+
+---
+
+# Consultar datasets disponibles (II)
+
+La función `istacbaser::istacbase_search` permite buscar tablas en base a un patrón determinado. La búsqueda se realiza por defecto en la variable `titulo`. Es posible el uso de expresiones regulares.
+
+
+```r
+busqueda.paro &lt;- istacbase_search("paro")
+busqueda.paro.empleo &lt;- istacbase_search("paro|empleo")
+```
+
+* Buscar en distintas variables de **cache** con el parámetro `fields`
+
+En este ejemplo se muestra el gasto total en turismo en las Islas Canarias por año y país de origen. Al tratarse de gasto en turismo, se realiza una consulta para el string *"egt"* (Encuesta de Gasto Turístico). El campo debe ser *"datos publicadosII"*.
+
+
+```r
+busqueda.egt &lt;- istacbase_search("egt",
+*                                fields = "datos publicadosII"
+                                 )
+```
+
+
+---
+
+Al observar el dataframe generado en el paso anterior se elige el *"ID"* que resulte de interés para la consulta.
+
+.texto2[
+
+```r
+head(busqueda.egt$titulo, n=20)
+```
+
+```
+##  [1] "Gasto turístico total según países de residencia. Canarias y periodos."                                                                
+##  [2] "Gasto turístico total según NUTS1 de residencia. Canarias y periodos."                                                                 
+##  [3] "Gasto turístico total según países de residencia. Islas de Canarias y periodos."                                                       
+##  [4] "Turistas de 16 y más años. Canarias y periodos."                                                                                       
+##  [5] "Gastos medios, incluyendo desgloses del gasto en Canarias, según países de residencia. Canarias y periodos."                           
+##  [6] "Gastos medios según NUTS1 de residencia. Canarias y periodos."                                                                         
+##  [7] "Gastos medios para Canarias según grupos de edad y sexos. Canarias y periodos."                                                        
+##  [8] "Gastos medios para Canarias según relaciones con la actividad económica o niveles de ingresos. Canarias y periodos."                   
+##  [9] "Gastos medios para Canarias según conceptos pagados en origen. Canarias y periodos."                                                   
+## [10] "Gastos medios para Canarias según intervalos de tiempos de antelación de reserva del viaje. Canarias y periodos."                      
+## [11] "Gastos medios para Canarias según canales de venta de los vuelos. Canarias y periodos."                                                
+## [12] "Gastos medios para Canarias según utilización de compañías aéreas de bajo coste. Canarias y periodos."                                 
+## [13] "Gastos medios para Canarias según canales de reserva de los alojamientos. Canarias y periodos."                                        
+## [14] "Gastos medios, incluyendo desgloses de gastos en Canarias, según tipos de alojamientos. Canarias y periodos."                          
+## [15] "Gastos medios para Canarias según motivos de la estancia. Canarias y periodos."                                                        
+## [16] "Gastos medios para Canarias según intervalos de noches pernoctadas. Canarias y periodos."                                              
+## [17] "Gastos medios para Canarias según valoraciones de la estancia. Canarias y periodos."                                                   
+## [18] "Distribución de turistas en intervalos de gastos medios para Canarias según países de residencia. Canarias y periodos."                
+## [19] "Distribución de turistas de 16 y más años en intervalos de gastos medios para Canarias según NUTS1 de residencia. Canarias y periodos."
+## [20] "Distribución de turistas en intervalos de gastos medios para Canarias según grupos de edades y sexos. Canarias y periodos."
+```
+]
+
+El primer elemento contiene el dataset que se busca, se indica el *"ID"*.
+
+.texto2[
+
+```r
+busqueda.egt$ID[1]
+```
+
+```
+## [1] "sec.hos.enc.ser.2528"
+```
+]
+
+---
+
+# Descargar datos de [ISTAC](http://www.gobiernodecanarias.org/istac/)
+
+
+En una línea el dataset completo está listo para usarse:
+
+
+```r
+df &lt;- istacbase(busqueda.egt$ID[1], POSIXct = TRUE, freq = "anual")
+```
+
+
+Hay diversos parámetros disponibles para afinar la consulta:
+* islas: nombre de las islas solicitadas. Por defecto *"all"*
+* labels: determina si el dataframe devuelve los codigos o las etiquetas
+* POSIXct: incluir columnas adicionales fecha y periodicidad
+* startdate: fecha de inicio
+* enddate: fecha de fin
+* freq: indica la periodicidad
+* mrv: número de observaciones solicitadas, inicia en las más actuales
+
+
+---
+
+# Representar los resultados usando ggplot
+
+Se filtra el dataframe:
+
+.texto2[
+
+```r
+df.anual &lt;- filter(df,
+                     Indicadores == "Valor absoluto" &amp;
+                     `Indicadores de gasto` == "GASTO TOTAL" &amp;
+                     `Países de residencia` != "TOTAL PAÍSES")
+```
+]
+
+Finalmente, usando *ggplot* la evolución del gasto total anual es:
+
+.pull-left[
+.texto2[
+
+```r
+library(ggplot2)
+
+ggplot(df.anual,
+       aes(x = Periodos,
+           y = valor,
+           fill = `Países de residencia`))  +
+  geom_col(position = "dodge") +
+  xlab("") +
+  ylab("") +
+  theme(
+    panel.background = element_blank(),
+    axis.ticks = element_blank()
+  )
+```
+]
+]
+
+.pull-right[
+![](istacbaser_shiny_canariasr_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;
+]
+
+---
+
+class: inverse, middle, center
+
+# VISUALIZANDO LOS RESULTADOS
+# The Canary Islands Tourism Dashboard
+
+---
+
+# La elección de los datos
+
+Dada la relevancia del turismo en la economía canaria, así como el acceso a la cantidad ingente de información que hay disponible a través del [ISTAC](http://www.gobiernodecanarias.org/istac/) resulta necesario fomentar el conocimiento y la difusión del mismo.
+
+Con este fin se ha elaborado esta aplicación que pretende ser un ejemplo de las posibilidades que ofrece la explotación de los datos en R.
+
+Esta aplicación emplea el servicio web ISTACbase a través de istacbaser. Se usa la información obtenida de la Encuesta de Gasto Turístico de Canarias.
+
+---
+
+# Estructura de la aplicación web con Shiny
+
+Se estructura en tres secciones de estudio:
+
+* Gasto turístico
+* Perfil del turista
+* Características del viaje
+
+![Home DashBoard](images/dashboard_home.png)
+
+---
+
+# Estructura de las secciones
+
+Las secciones presentan a la izquierda un panel de filtrado, que facilita al usuario la selección interactiva de los resultados. Al mismo tiempo se actualiza el gráfico y los datos mostrados en la tabla inferior.
+
+![EGT DashBoard](images/dashboard_egt.png)
+
+
+---
+
+# Visualizaciones disponibles
+
+Se resumen los distintos tipos visualizaciones de la aplicación ([enlace](https://jmcartiles.shinyapps.io/canary_islands_tourism_dashboard/)) actualmente, que son:
+
+.pull-left[![Serie Tiempo](images/dashboard_egt.png)]
+
+.pull-right[![Mapa DashBoard](images/dashboard_mapa.png)]
+
+
+.pull-left[![Reparto Gasto](images/dashboard_reparto_gasto.png)]
+
+.pull-right[![Forma Conocer](images/dashboard_forma_conocer.png)]
+
+---
+
+# Conclusiones
+
+&gt; La librería reduce de forma importante el tiempo de descargar los datos desde la web y luego importarlo a R.
+
+&gt; La aplicación Shiny permite integrar en varios cuadros de mando diferentes visualizaciones de los datos.
+
+&gt; La combinación de, por un lado datos públicos, como en este caso aporta el [ISTAC](http://www.gobiernodecanarias.org/istac/) y, por otro lado, diferentes herramientas y lenguajes de programación como en este caso [Github](https://github.com/) y [R](https://www.r-project.org/), dan la posibilidad de concretar estas ideas en un dashboard de turismo de uso libre.
+
+---
+
+class: inverse, middle, center
+
+# ¡GRACIAS!
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
